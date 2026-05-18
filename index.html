@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Tour VR - A-Frame</title>
+
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script src="js/tourData.js"></script>
+
+  <script>
+    const START_SCENE_ID = "2xe6BcmMY";
+
+    const HOTSPOT_DISTANCE = 4;
+    const HOTSPOT_SIZE = 0.28;
+
+    let scenes = [];
+
+    function initScenes() {
+      try {
+        if (!tourData || !tourData.images) {
+          console.error("tourData.images não encontrado.");
+          return;
+        }
+
+        scenes = JSON.parse(tourData.images);
+        console.log("Cenas carregadas:", scenes.length);
+      } catch (error) {
+        console.error("Erro ao carregar tourData.images:", error);
+        scenes = [];
+      }
+    }
+
+    function getSceneById(sceneId) {
+      return scenes.find(scene => scene.id === sceneId);
+    }
+
+    function getOptimizedSceneUrl(scene) {
+      return `images_aframe/scene-${scene.id}.jpg`;
+    }
+
+    function clearHotspots() {
+      const container = document.querySelector("#hotspots");
+      if (container) {
+        container.innerHTML = "";
+      }
+    }
+
+    function convertCoords(coords) {
+      if (!coords) {
+        return "0 1.5 -3";
+      }
+
+      let source = null;
+
+      if (coords.scene) {
+        source = coords.scene;
+      } else if (coords.plane) {
+        source = coords.plane;
+      } else {
+        source = coords;
+      }
+
+      let x = Number(source.x || 0);
+      let y = Number(source.y || 0);
+      let z = Number(source.z || 0);
+
+      const length = Math.sqrt(x * x + y * y + z * z) || 1;
+
+      x = x / length;
+      y = y / length;
+      z = z / length;
+
+      return `${x * HOTSPOT_DISTANCE} ${y * HOTSPOT_DISTANCE} ${z * HOTSPOT_DISTANCE}`;
+    }
+
+    function createNavigationHotspot(hotspot) {
+      if (!hotspot || !hotspot.image || !hotspot.image.id) {
+        return null;
+      }
+
+      const targetSceneId = hotspot.image.id;
+      const targetTitle = hotspot.image.title || "Avançar";
+
+      const wrapper = document.createElement("a-entity");
+      wrapper.setAttribute("class", "clickable");
+      wrapper.setAttribute("position", convertCoords(hotspot.coords));
+      wrapper.setAttribute("look-at-camera", "");
+
+      const circle = document.createElement("a-circle");
+      circle.setAttribute("radius", HOTSPOT_SIZE);
+      circle.setAttribute("color", "#ffffff");
+      circle.setAttribute("material", "shader: flat; opacity: 0.9; transparent: true");
+      circle.setAttribute("class", "clickable");
+
+      const arrow = document.createElement("a-text");
+      arrow.setAttribute("value", ">");
+      arrow.setAttribute("align", "center");
+      arrow.setAttribute("color", "#111111");
+      arrow.setAttribute("width", "2");
+      arrow.setAttribute("position", "0 0 0.02");
+
+      const label = document.createElement("a-text");
+      label.setAttribute("value", targetTitle);
+      label.setAttribute("align", "center");
+      label.setAttribute("color", "#ffffff");
+      label.setAttribute("width", "2");
+      label.setAttribute("position", "0 -0.45 0");
+
+      wrapper.appendChild(circle);
+      wrapper.appendChild(arrow);
+      wrapper.appendChild(label);
+
+      wrapper.addEventListener("click", () => {
+        loadScene(targetSceneId);
+      });
+
+      return wrapper;
+    }
+
+    function renderHotspots(scene) {
+      clearHotspots();
+
+      const container = document.querySelector("#hotspots");
+
+      if (!container || !scene) {
+        return;
+      }
+
+      if (!Array.isArray(scene.hotspots)) {
+        console.warn("Cena sem hotspots:", scene.title);
+        return;
+      }
+
+      scene.hotspots.forEach(hotspot => {
+        try {
+          const entity = createNavigationHotspot(hotspot);
+
+          if (entity) {
+            container.appendChild(entity);
+          }
+        } catch (error) {
+          console.warn("Erro ao criar hotspot:", hotspot, error);
+        }
+      });
+    }
+
+    function loadScene(sceneId) {
+      const scene = getSceneById(sceneId);
+
+      if (!scene) {
+        console.error("Cena não encontrada:", sceneId);
+        return;
+      }
+
+      const panorama = document.querySelector("#panorama");
+      const title = document.querySelector("#scene-title");
+
+      const optimizedUrl = getOptimizedSceneUrl(scene);
+
+      console.log("Carregando cena:", scene.title);
+      console.log("Imagem:", optimizedUrl);
+
+      panorama.setAttribute(
+        "material",
+        `shader: flat; src: url(${optimizedUrl}); side: back`
+      );
+
+      if (title) {
+        title.setAttribute("value", scene.title || scene.id);
+      }
+
+      renderHotspots(scene);
+    }
+
+    AFRAME.registerComponent("look-at-camera", {
+      tick: function () {
+        const camera = document.querySelector("[camera]");
+
+        if (!camera) {
+          return;
+        }
+
+        this.el.object3D.lookAt(camera.object3D.position);
+      }
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initScenes();
+
+      const sceneEl = document.querySelector("a-scene");
+
+      sceneEl.addEventListener("loaded", () => {
+        console.log("A-Frame carregado.");
+        loadScene(START_SCENE_ID);
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <a-scene
+    vr-mode-ui="enabled: true"
+    webxr="referenceSpaceType: local-floor"
+    renderer="colorManagement: true"
+    loading-screen="enabled: false"
+    raycaster="objects: .clickable">
+
+    <a-entity
+      id="panorama"
+      geometry="primitive: sphere; radius: 500; segmentsWidth: 64; segmentsHeight: 32"
+      material="shader: flat; src: url(images_aframe/scene-2xe6BcmMY.jpg); side: back"
+      scale="-1 1 1">
+    </a-entity>
+
+    <a-entity id="hotspots"></a-entity>
+
+    <a-entity id="rig" position="0 0 0">
+
+      <a-camera position="0 0 0">
+
+        <a-cursor
+          fuse="true"
+          fuse-timeout="1000"
+          raycaster="objects: .clickable"
+          geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
+          material="color: white; shader: flat">
+        </a-cursor>
+
+        <a-text
+          id="scene-title"
+          value=""
+          position="0 -0.38 -1.2"
+          align="center"
+          width="2.2"
+          color="white">
+        </a-text>
+
+      </a-camera>
+
+      <a-entity
+        laser-controls="hand: right"
+        raycaster="objects: .clickable; far: 20"
+        line="color: white; opacity: 0.75">
+      </a-entity>
+
+      <a-entity
+        laser-controls="hand: left"
+        raycaster="objects: .clickable; far: 20"
+        line="color: white; opacity: 0.75">
+      </a-entity>
+
+    </a-entity>
+
+  </a-scene>
+</body>
+</html>
