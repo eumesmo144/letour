@@ -8,12 +8,52 @@
   <script src="js/tourData.js"></script>
 
   <script>
+    const MANUAL_HOTSPOT_POSITIONS = {
+  "2xe6BcmMY": {
+    "HoTyDbNB0": "0 1.4 -4"
+  }
+};
     const START_SCENE_ID = "2xe6BcmMY";
 
     const HOTSPOT_DISTANCE = 4;
     const HOTSPOT_SIZE = 0.28;
 
     let scenes = [];
+
+    AFRAME.registerComponent("coord-picker", {
+  init: function () {
+    this.el.addEventListener("click", function (event) {
+      const intersection = event.detail.intersection;
+
+      if (!intersection) {
+        console.warn("Nenhuma interseção encontrada.");
+        return;
+      }
+
+      const point = intersection.point;
+
+      // Normaliza para uma distância confortável para hotspot
+      const distance = 4;
+      const length = Math.sqrt(
+        point.x * point.x +
+        point.y * point.y +
+        point.z * point.z
+      ) || 1;
+
+      const x = (point.x / length) * distance;
+      const y = (point.y / length) * distance;
+      const z = (point.z / length) * distance;
+
+      const position = `${x.toFixed(2)} ${y.toFixed(2)} ${z.toFixed(2)}`;
+
+      console.log("Coordenada A-Frame:", position);
+
+      navigator.clipboard?.writeText(position)
+        .then(() => console.log("Coordenada copiada:", position))
+        .catch(() => console.log("Copie manualmente:", position));
+    });
+  }
+});
 
     function initScenes() {
       try {
@@ -74,48 +114,46 @@
     }
 
     function createNavigationHotspot(hotspot) {
-      if (!hotspot || !hotspot.image || !hotspot.image.id) {
-        return null;
-      }
+  if (!hotspot || !hotspot.image || !hotspot.image.id) {
+    return null;
+  }
 
-      const targetSceneId = hotspot.image.id;
-      const targetTitle = hotspot.image.title || "Avançar";
+  const targetSceneId = hotspot.image.id;
+  const targetTitle = hotspot.image.title || "Avançar";
 
-      const wrapper = document.createElement("a-entity");
-      wrapper.setAttribute("class", "clickable");
-      wrapper.setAttribute("position", convertCoords(hotspot.coords));
-      wrapper.setAttribute("look-at-camera", "");
+  console.log("Hotspot:", window.currentSceneId, "->", targetSceneId, targetTitle);
 
-      const circle = document.createElement("a-circle");
-      circle.setAttribute("radius", HOTSPOT_SIZE);
-      circle.setAttribute("color", "#ffffff");
-      circle.setAttribute("material", "shader: flat; opacity: 0.9; transparent: true");
-      circle.setAttribute("class", "clickable");
+  const wrapper = document.createElement("a-entity");
 
-      const arrow = document.createElement("a-text");
-      arrow.setAttribute("value", ">");
-      arrow.setAttribute("align", "center");
-      arrow.setAttribute("color", "#111111");
-      arrow.setAttribute("width", "2");
-      arrow.setAttribute("position", "0 0 0.02");
+  wrapper.setAttribute("class", "clickable");
+  wrapper.setAttribute("position", convertCoords(hotspot.coords));
+  wrapper.setAttribute("look-at-camera", "");
 
-      const label = document.createElement("a-text");
-      label.setAttribute("value", targetTitle);
-      label.setAttribute("align", "center");
-      label.setAttribute("color", "#ffffff");
-      label.setAttribute("width", "2");
-      label.setAttribute("position", "0 -0.45 0");
+  // PNG da seta
+  const arrowImage = document.createElement("a-image");
+  arrowImage.setAttribute("src", "assets/hotspot-icon-black-thumb-removebg-preview.png");
+  arrowImage.setAttribute("width", "0.6");
+  arrowImage.setAttribute("height", "0.6");
+  arrowImage.setAttribute("transparent", "true");
+  arrowImage.setAttribute("class", "clickable");
 
-      wrapper.appendChild(circle);
-      wrapper.appendChild(arrow);
-      wrapper.appendChild(label);
+  // Texto abaixo da seta
+  const label = document.createElement("a-text");
+  label.setAttribute("value", targetTitle);
+  label.setAttribute("align", "center");
+  label.setAttribute("color", "#ffffff");
+  label.setAttribute("width", "2");
+  label.setAttribute("position", "0 -0.45 0");
 
-      wrapper.addEventListener("click", () => {
-        loadScene(targetSceneId);
-      });
+  wrapper.appendChild(arrowImage);
+  wrapper.appendChild(label);
 
-      return wrapper;
-    }
+  wrapper.addEventListener("click", () => {
+    loadScene(targetSceneId);
+  });
+
+  return wrapper;
+}
 
     function renderHotspots(scene) {
       clearHotspots();
@@ -145,6 +183,7 @@
     }
 
     function loadScene(sceneId) {
+      window.currentSceneId = sceneId;
       const scene = getSceneById(sceneId);
 
       if (!scene) {
@@ -205,12 +244,14 @@
     loading-screen="enabled: false"
     raycaster="objects: .clickable">
 
-    <a-entity
-      id="panorama"
-      geometry="primitive: sphere; radius: 500; segmentsWidth: 64; segmentsHeight: 32"
-      material="shader: flat; src: url(images_aframe/scene-2xe6BcmMY.jpg); side: back"
-      scale="-1 1 1">
-    </a-entity>
+  <a-entity
+    id="panorama"
+    class="clickable"
+    coord-picker
+    geometry="primitive: sphere; radius: 500; segmentsWidth: 64; segmentsHeight: 32"
+    material="shader: flat; src: url(images_aframe/scene-2xe6BcmMY.jpg); side: back"
+    scale="-1 1 1">
+  </a-entity>
 
     <a-entity id="hotspots"></a-entity>
 
@@ -218,13 +259,13 @@
 
       <a-camera position="0 0 0">
 
-        <a-cursor
-          fuse="true"
-          fuse-timeout="1000"
-          raycaster="objects: .clickable"
-          geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
-          material="color: white; shader: flat">
-        </a-cursor>
+  <a-cursor
+    fuse="true"
+    fuse-timeout="1000"
+    raycaster="objects: .clickable"
+    geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
+    material="color: white; shader: flat">
+  </a-cursor>
 
         <a-text
           id="scene-title"
