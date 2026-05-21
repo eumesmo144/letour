@@ -8,11 +8,12 @@
   <script src="js/tourData.js"></script>
 
   <script>
-    const MANUAL_HOTSPOT_POSITIONS = {
-  "2xe6BcmMY": {
-    "HoTyDbNB0": "0 1.4 -4"
-  }
-};
+  const MANUAL_HOTSPOT_POSITIONS = {
+    "2xe6BcmMY": {
+      "qEeHreqmJ5": "-1.92 0.41 -3.48",
+      "s6j9nJfTWA": "5 -0.95 2.92"
+    }
+  };
     const START_SCENE_ID = "2xe6BcmMY";
 
     const HOTSPOT_DISTANCE = 4;
@@ -20,19 +21,39 @@
 
     let scenes = [];
 
-    AFRAME.registerComponent("coord-picker", {
+    AFRAME.registerComponent("coord-debugger", {
   init: function () {
-    this.el.addEventListener("click", function (event) {
-      const intersection = event.detail.intersection;
+    window.addEventListener("keydown", (event) => {
+      if (event.key.toLowerCase() !== "c") return;
 
-      if (!intersection) {
-        console.warn("Nenhuma interseção encontrada.");
+      const sceneEl = document.querySelector("a-scene");
+      const cameraEl = document.querySelector("[camera]");
+      const panoramaEl = document.querySelector("#panorama");
+
+      if (!sceneEl || !cameraEl || !panoramaEl) {
+        console.warn("Cena, câmera ou panorama não encontrados.");
         return;
       }
 
-      const point = intersection.point;
+      const camera = cameraEl.object3D;
+      const panorama = panoramaEl.object3D;
 
-      // Normaliza para uma distância confortável para hotspot
+      const origin = new THREE.Vector3();
+      const direction = new THREE.Vector3();
+
+      camera.getWorldPosition(origin);
+      camera.getWorldDirection(direction);
+
+      const raycaster = new THREE.Raycaster(origin, direction);
+      const intersections = raycaster.intersectObject(panorama, true);
+
+      if (!intersections.length) {
+        console.warn("Nenhum ponto encontrado no panorama.");
+        return;
+      }
+
+      const point = intersections[0].point;
+
       const distance = 4;
       const length = Math.sqrt(
         point.x * point.x +
@@ -46,11 +67,17 @@
 
       const position = `${x.toFixed(2)} ${y.toFixed(2)} ${z.toFixed(2)}`;
 
+      console.log("===================================");
       console.log("Coordenada A-Frame:", position);
+      console.log("Use assim:");
+      console.log(`position: "${position}"`);
+      console.log("===================================");
 
-      navigator.clipboard?.writeText(position)
-        .then(() => console.log("Coordenada copiada:", position))
-        .catch(() => console.log("Copie manualmente:", position));
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(position)
+          .then(() => console.log("Coordenada copiada:", position))
+          .catch(() => console.log("Não copiou automaticamente. Copie manualmente:", position));
+      }
     });
   }
 });
@@ -126,7 +153,16 @@
   const wrapper = document.createElement("a-entity");
 
   wrapper.setAttribute("class", "clickable");
-  wrapper.setAttribute("position", convertCoords(hotspot.coords));
+  const currentSceneId = window.currentSceneId;
+
+  const manualPosition =
+    MANUAL_HOTSPOT_POSITIONS[currentSceneId] &&
+    MANUAL_HOTSPOT_POSITIONS[currentSceneId][targetSceneId];
+
+  wrapper.setAttribute(
+    "position",
+    manualPosition || convertCoords(hotspot.coords)
+  );  
   wrapper.setAttribute("look-at-camera", "");
 
   // PNG da seta
@@ -184,6 +220,7 @@
 
     function loadScene(sceneId) {
       window.currentSceneId = sceneId;
+
       const scene = getSceneById(sceneId);
 
       if (!scene) {
@@ -238,6 +275,7 @@
 
 <body>
   <a-scene
+    coord-debugger
     vr-mode-ui="enabled: true"
     webxr="referenceSpaceType: local-floor"
     renderer="colorManagement: true"
@@ -280,13 +318,13 @@
 
       <a-entity
         laser-controls="hand: right"
-        raycaster="objects: .clickable; far: 20"
+        raycaster="objects: .clickable; far: 1000"
         line="color: white; opacity: 0.75">
       </a-entity>
 
       <a-entity
         laser-controls="hand: left"
-        raycaster="objects: .clickable; far: 20"
+        raycaster="objects: .clickable; far: 1000"
         line="color: white; opacity: 0.75">
       </a-entity>
 
