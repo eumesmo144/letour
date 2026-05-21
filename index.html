@@ -10,78 +10,86 @@
   <script>
   const MANUAL_HOTSPOT_POSITIONS = {
     "2xe6BcmMY": {
-      "qEeHreqmJ5": "-1.92 0.41 -3.48",
-      "s6j9nJfTWA": "5 -0.95 2.92"
+      "qEeHreqmJ5": "-2.87 -0.13 2.78",
+      "s6j9nJfTWA": "-2.53 1.40 -3.10"
     }
   };
+  const CUSTOM_HOTSPOT_ICONS = {
+  "2xe6BcmMY": {
+    "s6j9nJfTWA": "assets/img/chuva.png"
+  }
+};
     const START_SCENE_ID = "2xe6BcmMY";
 
     const HOTSPOT_DISTANCE = 4;
     const HOTSPOT_SIZE = 0.28;
 
     let scenes = [];
+    function normalizeId(id) {
+  return String(id || "").trim();
+}
 
-    AFRAME.registerComponent("coord-debugger", {
+   AFRAME.registerComponent("coord-debugger", {
   init: function () {
     window.addEventListener("keydown", (event) => {
       if (event.key.toLowerCase() !== "c") return;
 
-      const sceneEl = document.querySelector("a-scene");
       const cameraEl = document.querySelector("[camera]");
-      const panoramaEl = document.querySelector("#panorama");
+      const container = document.querySelector("#hotspots");
 
-      if (!sceneEl || !cameraEl || !panoramaEl) {
-        console.warn("Cena, câmera ou panorama não encontrados.");
+      if (!cameraEl || !container) {
+        console.warn("Câmera ou container de hotspots não encontrados.");
         return;
       }
 
       const camera = cameraEl.object3D;
-      const panorama = panoramaEl.object3D;
 
-      const origin = new THREE.Vector3();
+      const cameraPosition = new THREE.Vector3();
       const direction = new THREE.Vector3();
 
-      camera.getWorldPosition(origin);
+      camera.getWorldPosition(cameraPosition);
       camera.getWorldDirection(direction);
 
-      const raycaster = new THREE.Raycaster(origin, direction);
-      const intersections = raycaster.intersectObject(panorama, true);
-
-      if (!intersections.length) {
-        console.warn("Nenhum ponto encontrado no panorama.");
-        return;
-      }
-
-      const point = intersections[0].point;
-
       const distance = 4;
-      const length = Math.sqrt(
-        point.x * point.x +
-        point.y * point.y +
-        point.z * point.z
-      ) || 1;
 
-      const x = (point.x / length) * distance;
-      const y = (point.y / length) * distance;
-      const z = (point.z / length) * distance;
+      /*
+        Como sua esfera está invertida, usamos o sentido oposto.
+        Agora NÃO zeramos direction.y.
+        Assim a altura também é capturada.
+      */
+      const x = cameraPosition.x - direction.x * distance;
+      const y = cameraPosition.y - direction.y * distance;
+      const z = cameraPosition.z - direction.z * distance;
 
       const position = `${x.toFixed(2)} ${y.toFixed(2)} ${z.toFixed(2)}`;
 
       console.log("===================================");
-      console.log("Coordenada A-Frame:", position);
-      console.log("Use assim:");
+      console.log("Coordenada A-Frame com altura livre:", position);
       console.log(`position: "${position}"`);
       console.log("===================================");
+
+      const marker = document.createElement("a-sphere");
+      marker.setAttribute("position", position);
+      marker.setAttribute("radius", "0.18");
+      marker.setAttribute("color", "red");
+      marker.setAttribute("material", "shader: flat; color: red");
+
+      container.appendChild(marker);
+
+      setTimeout(() => {
+        if (marker.parentNode) {
+          marker.parentNode.removeChild(marker);
+        }
+      }, 5000);
 
       if (navigator.clipboard) {
         navigator.clipboard.writeText(position)
           .then(() => console.log("Coordenada copiada:", position))
-          .catch(() => console.log("Não copiou automaticamente. Copie manualmente:", position));
+          .catch(() => console.log("Copie manualmente:", position));
       }
     });
   }
 });
-
     function initScenes() {
       try {
         if (!tourData || !tourData.images) {
@@ -145,35 +153,43 @@
     return null;
   }
 
-  const targetSceneId = hotspot.image.id;
+  const targetSceneId = normalizeId(hotspot.image.id);
   const targetTitle = hotspot.image.title || "Avançar";
+  const currentSceneId = normalizeId(window.currentSceneId);
 
-  console.log("Hotspot:", window.currentSceneId, "->", targetSceneId, targetTitle);
+  console.log("Hotspot:", currentSceneId, "->", targetSceneId, targetTitle);
 
   const wrapper = document.createElement("a-entity");
-
   wrapper.setAttribute("class", "clickable");
-  const currentSceneId = window.currentSceneId;
 
   const manualPosition =
     MANUAL_HOTSPOT_POSITIONS[currentSceneId] &&
     MANUAL_HOTSPOT_POSITIONS[currentSceneId][targetSceneId];
 
-  wrapper.setAttribute(
-    "position",
-    manualPosition || convertCoords(hotspot.coords)
-  );  
+  const finalPosition = manualPosition || convertCoords(hotspot.coords);
+
+  console.log("Posição manual:", manualPosition);
+  console.log("Posição final:", finalPosition);
+
+  wrapper.setAttribute("position", finalPosition);
   wrapper.setAttribute("look-at-camera", "");
 
-  // PNG da seta
+  const customIcon =
+    CUSTOM_HOTSPOT_ICONS[currentSceneId] &&
+    CUSTOM_HOTSPOT_ICONS[currentSceneId][targetSceneId];
+
+  const iconPath =
+    customIcon || "assets/img/hotspot-icon-black-thumb-removebg-preview.png";
+
   const arrowImage = document.createElement("a-image");
-  arrowImage.setAttribute("src", "assets/hotspot-icon-black-thumb-removebg-preview.png");
+  arrowImage.setAttribute(
+    "material",
+    `src: url(${iconPath}); transparent: true; alphaTest: 0.1; shader: flat`
+  );
   arrowImage.setAttribute("width", "0.6");
   arrowImage.setAttribute("height", "0.6");
-  arrowImage.setAttribute("transparent", "true");
   arrowImage.setAttribute("class", "clickable");
 
-  // Texto abaixo da seta
   const label = document.createElement("a-text");
   label.setAttribute("value", targetTitle);
   label.setAttribute("align", "center");
@@ -284,8 +300,6 @@
 
   <a-entity
     id="panorama"
-    class="clickable"
-    coord-picker
     geometry="primitive: sphere; radius: 500; segmentsWidth: 64; segmentsHeight: 32"
     material="shader: flat; src: url(images_aframe/scene-2xe6BcmMY.jpg); side: back"
     scale="-1 1 1">
