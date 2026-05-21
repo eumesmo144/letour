@@ -37,9 +37,16 @@ for filename in os.listdir(INPUT_DIR):
     try:
         with Image.open(input_path) as img:
             original_size = img.size
+            width, height = original_size
+
+            # Ignora thumbnails/tiles/ícones com resolução 512 ou 256
+            if width in (512, 256) or height in (512, 256):
+                print(f"Ignorado (resolução 512/256): {filename} | tamanho: {original_size}")
+                skipped += 1
+                continue
 
             # Segurança extra: só converte imagens próximas de proporção 2:1
-            ratio = original_size[0] / original_size[1]
+            ratio = width / height
 
             if not (1.9 <= ratio <= 2.1):
                 print(f"Ignorado (não parece panorama 2:1): {filename} | tamanho: {original_size}")

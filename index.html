@@ -12,12 +12,34 @@
     "2xe6BcmMY": {
       "qEeHreqmJ5": "-2.87 -0.13 2.78",
       "s6j9nJfTWA": "-2.53 1.40 -3.10"
-    }
+    },
+    "qEeHreqmJ5": {
+      "CWFZNcJgO": "-1.92 1.15 -3.31",
+      "2xe6BcmMY": "-0.35 -0.02 -3.98",
+      "1kGDEh6nh4": "2.36 -0.46 3.20"
+    },
+    "CWFZNcJgO": {
+      "qEeHreqmJ5": "1.87 0.55 3.49"
+    },
+    "1kGDEh6nh4": {
+      "qEeHreqmJ5": "3.49 0.18 -1.94",
+      "TZyhEGStU": "1.45 -0.06 3.73"
+    },
+     "TZyhEGStU": {
+      "1kGDEh6nh4": "3.88 -0.99 -0.06"
+    },
+    
   };
   const CUSTOM_HOTSPOT_ICONS = {
   "2xe6BcmMY": {
     "s6j9nJfTWA": "assets/img/chuva.png"
-  }
+  },
+  "qEeHreqmJ5": {
+    "CWFZNcJgO": "assets/img/chuva.png"
+  },
+  "1kGDEh6nh4": {
+      "42XIjxE73A": "assets/img/chuva.png"
+    },
 };
     const START_SCENE_ID = "2xe6BcmMY";
 
@@ -168,8 +190,6 @@
 
   const finalPosition = manualPosition || convertCoords(hotspot.coords);
 
-  console.log("Posição manual:", manualPosition);
-  console.log("Posição final:", finalPosition);
 
   wrapper.setAttribute("position", finalPosition);
   wrapper.setAttribute("look-at-camera", "");
@@ -250,7 +270,7 @@
       const optimizedUrl = getOptimizedSceneUrl(scene);
 
       console.log("Carregando cena:", scene.title);
-      console.log("Imagem:", optimizedUrl);
+      console.log("ID da cena atual:", scene.id);
 
       panorama.setAttribute(
         "material",
