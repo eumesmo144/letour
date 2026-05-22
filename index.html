@@ -30,31 +30,88 @@
     },
     
   };
+const MANUAL_VIDEO_MODAL_HOTSPOTS = {
+  "FL2V1htHA3": [
+    {
+      position: "-3.42 0.25 -2.06",
+      icon: "assets/img/modal/yt.png",
+      video: "assets/img/modal/vid.mp4",
+      modalPosition: "-3.29 -0.34 2.24",
+      title: "Vídeo explicativo",
+      text: ""
+    }
+  ]
+};
+  const MANUAL_IMAGE_MODAL_HOTSPOTS = {
+  "qEeHreqmJ5": [
+    {
+      position: "-2.76 1.23 -2.62",
+      icon: "assets/img/modal/info.png",
+      image: "assets/img/modal/jua.jpg",
+      modalPosition: "-3.90 0.34 -0.82"
+
+    }
+  ],
+  "FL2V1htHA3": [{
+    position: "-3.89 0.21 -0.89",
+    icon: "assets/img/modal/info.png",
+    image: "assets/img/modal/rup.jpg",
+      modalPosition: "-3.29 -0.34 2.24"
+  },
+]
+};
   const CUSTOM_HOTSPOT_ICONS = {
   "2xe6BcmMY": {
-    "s6j9nJfTWA": "assets/img/chuva.png"
-  },
-  "qEeHreqmJ5": {
-    "CWFZNcJgO": "assets/img/chuva.png"
-  },
-  "1kGDEh6nh4": {
+      "s6j9nJfTWA": "assets/img/chuva.png"
+    },
+    "qEeHreqmJ5": {
+      "CWFZNcJgO": "assets/img/chuva.png"
+    },
+    "1kGDEh6nh4": {
       "42XIjxE73A": "assets/img/chuva.png"
     },
-    "8Y5a8F3jJC": 
-    {"nA2AyfQcAs": "assets/img/chuva.png"
-
+    "8Y5a8F3jJC":
+    {
+      "nA2AyfQcAs": "assets/img/chuva.png"
     },
-    "nA2AyfQcAs": 
-    {"gfsHGXEQ-X": "assets/img/chuva.png"
-
+    "nA2AyfQcAs":
+    {
+      "gfsHGXEQ-X": "assets/img/chuva.png"
     },
-       "gfsHGXEQ-X": 
-    {"CQCTpzzUqw": "assets/img/chuva.png"
-
+    "gfsHGXEQ-X":
+    {
+      "CQCTpzzUqw": "assets/img/chuva.png"
     },
-
-
-    
+    "6ZkCPJmKb1":
+      { "wkRUuFUvzN": "assets/img/chuva.png" },
+    "Rqr5Oy424U":
+      { "kJKW-s_V9": "assets/img/chuva.png" },
+    "kJKW-s_V9":
+      { "mYOrz92Aw_": "assets/img/chuva.png" },
+    "vpk4T8TxtS":
+      { "k9dapCdGuv": "assets/img/chuva.png" },
+    "RJqZgP0W3p":
+      { "T6z1gzeqw": "assets/img/chuva.png" },
+    "T6z1gzeqw":
+      { "pJmfAV4apA": "assets/img/chuva.png" },
+    "F2K2CVXNPQ":
+      { "pJmfAV4apA": "assets/img/chuva.png" },
+    "pJmfAV4apA":
+      { "T6z1gzeqw": "assets/img/chuva.png" },
+    "7NytOc4o_":
+      { "J_9vUYsaI": "assets/img/chuva.png" },
+    "zeMhQL2d1W":
+      { "rqQ2YdohAq": "assets/img/chuva.png" },
+    "rqQ2YdohAq":
+      { "j1fQxkkQik": "assets/img/chuva.png" },
+    "j1fQxkkQik":
+      { "rqQ2YdohAq": "assets/img/chuva.png" },
+    "67ljg_FaG5":
+      { "OVkSmHPnl6": "assets/img/chuva.png" },
+    "p3TD6GZtH8":
+      { "eASRw74AL7": "assets/img/chuva.png" },
+    "FL2V1htHA3":
+      { "eASRw74AL7": "assets/img/chuva.png" },
 };
     const START_SCENE_ID = "2xe6BcmMY";
 
@@ -238,10 +295,220 @@
   wrapper.addEventListener("click", () => {
     loadScene(targetSceneId);
   });
+  arrowImage.addEventListener("click", (event) => {
+  event.stopPropagation();
+  loadScene(targetSceneId);
+});
 
   return wrapper;
 }
+function openImageModal(data) {
+  const modal = document.querySelector("#image-modal");
+  const modalImage = document.querySelector("#modal-image");
+  const modalTitle = document.querySelector("#modal-title");
+  const modalText = document.querySelector("#modal-text");
+  const camera = document.querySelector("[camera]");
 
+  if (!modal || !modalImage || !modalTitle || !modalText || !camera) {
+    console.warn("Modal ou câmera não encontrados.");
+    return;
+  }
+
+  modalImage.setAttribute(
+    "material",
+    `shader: flat; src: url(${data.image}); transparent: true`
+  );
+
+  modalTitle.setAttribute("value", data.title || "Juazeiro");
+  modalText.setAttribute("value", data.text || "");
+
+  if (data.modalPosition) {
+    modal.setAttribute("position", data.modalPosition);
+  } else {
+    modal.setAttribute("position", "0 1.6 -2.5");
+  }
+
+  // faz o modal olhar para a câmera
+  const cameraPosition = new THREE.Vector3();
+  camera.object3D.getWorldPosition(cameraPosition);
+  modal.object3D.lookAt(cameraPosition);
+
+  modal.setAttribute("visible", "true");
+}
+
+function closeImageModal() {
+  const modal = document.querySelector("#image-modal");
+
+  if (modal) {
+    modal.setAttribute("visible", "false");
+  }
+}
+
+function createImageModalHotspot(data) {
+  const wrapper = document.createElement("a-entity");
+
+  wrapper.setAttribute("position", data.position);
+  wrapper.setAttribute("look-at-camera", "");
+
+  /*
+    Área invisível maior para o gaze acertar.
+    O cursor/fuse vai mirar nesse plano.
+  */
+  const hitbox = document.createElement("a-plane");
+  hitbox.setAttribute("class", "clickable");
+  hitbox.setAttribute("width", "1.1");
+  hitbox.setAttribute("height", "1.1");
+  hitbox.setAttribute("position", "0 0 0.06");
+  hitbox.setAttribute(
+    "material",
+    "color: #ffffff; opacity: 0.01; transparent: true; shader: flat; side: double"
+  );
+
+  const icon = document.createElement("a-image");
+  icon.setAttribute(
+    "material",
+    `src: url(${data.icon || DEFAULT_INFO_ICON}); transparent: true; alphaTest: 0.1; shader: flat`
+  );
+  icon.setAttribute("width", "0.55");
+  icon.setAttribute("height", "0.55");
+  icon.setAttribute("position", "0 0 0.08");
+
+  const label = document.createElement("a-text");
+  label.setAttribute("value", data.title || "Info");
+  label.setAttribute("align", "center");
+  label.setAttribute("color", "#ffffff");
+  label.setAttribute("width", "2");
+  label.setAttribute("position", "0 -0.42 0.09");
+
+  function openByGaze(event) {
+    if (event) {
+      event.stopPropagation();
+    }
+
+    console.log("Infospot de imagem clicado por gaze:", data.title);
+    openImageModal(data);
+  }
+
+  /*
+    O click principal precisa estar no hitbox,
+    porque é ele que o gaze realmente intercepta.
+  */
+  hitbox.addEventListener("click", openByGaze);
+
+  wrapper.appendChild(hitbox);
+  wrapper.appendChild(icon);
+  wrapper.appendChild(label);
+
+  return wrapper;
+}
+function openVideoModal(data) {
+  const modal = document.querySelector("#video-modal");
+  const video = document.querySelector("#modal-video");
+  const title = document.querySelector("#video-modal-title");
+  const text = document.querySelector("#video-modal-text");
+  const camera = document.querySelector("[camera]");
+
+  if (!modal || !video || !title || !text || !camera) {
+    console.warn("Modal de vídeo ou câmera não encontrados.");
+    return;
+  }
+
+  video.setAttribute("src", data.video);
+  title.setAttribute("value", data.title || "Vídeo");
+  text.setAttribute("value", data.text || "");
+
+  const cameraObject = camera.object3D;
+  const cameraPosition = new THREE.Vector3();
+  const direction = new THREE.Vector3();
+
+  cameraObject.getWorldPosition(cameraPosition);
+  cameraObject.getWorldDirection(direction);
+
+  const modalPosition = cameraPosition.clone().add(direction.multiplyScalar(1.6));
+
+  modal.object3D.position.copy(modalPosition);
+  modal.object3D.lookAt(cameraPosition);
+
+  modal.setAttribute("visible", "true");
+
+  const videoEl = video.components.material?.material?.map?.image;
+
+  if (videoEl && videoEl.play) {
+    videoEl.play().catch(error => {
+      console.warn("Não foi possível iniciar o vídeo automaticamente:", error);
+    });
+  }
+}
+
+function closeVideoModal() {
+  const modal = document.querySelector("#video-modal");
+  const video = document.querySelector("#modal-video");
+
+  if (video) {
+    const videoEl = video.components.material?.material?.map?.image;
+
+    if (videoEl && videoEl.pause) {
+      videoEl.pause();
+      videoEl.currentTime = 0;
+    }
+
+    video.removeAttribute("src");
+  }
+
+  if (modal) {
+    modal.setAttribute("visible", "false");
+  }
+}
+
+function createVideoModalHotspot(data) {
+  const wrapper = document.createElement("a-entity");
+
+  wrapper.setAttribute("position", data.position);
+  wrapper.setAttribute("look-at-camera", "");
+
+  const hitbox = document.createElement("a-plane");
+  hitbox.setAttribute("class", "clickable");
+  hitbox.setAttribute("width", "1.1");
+  hitbox.setAttribute("height", "1.1");
+  hitbox.setAttribute("position", "0 0 0.06");
+  hitbox.setAttribute(
+    "material",
+    "color: #ffffff; opacity: 0.01; transparent: true; shader: flat; side: double"
+  );
+
+  const icon = document.createElement("a-image");
+  icon.setAttribute(
+    "material",
+    `src: url(${data.icon || "assets/img/video.png"}); transparent: true; alphaTest: 0.1; shader: flat`
+  );
+  icon.setAttribute("width", "0.6");
+  icon.setAttribute("height", "0.6");
+  icon.setAttribute("position", "0 0 0.08");
+
+  const label = document.createElement("a-text");
+  label.setAttribute("value", data.title || "Vídeo");
+  label.setAttribute("align", "center");
+  label.setAttribute("color", "#ffffff");
+  label.setAttribute("width", "2");
+  label.setAttribute("position", "0 -0.42 0.09");
+
+  function handleClick(event) {
+    if (event) {
+      event.stopPropagation();
+    }
+
+    console.log("Hotspot de vídeo clicado:", data.title);
+    openVideoModal(data);
+  }
+
+  hitbox.addEventListener("click", handleClick);
+
+  wrapper.appendChild(hitbox);
+  wrapper.appendChild(icon);
+  wrapper.appendChild(label);
+
+  return wrapper;
+}
     function renderHotspots(scene) {
       clearHotspots();
 
@@ -255,7 +522,19 @@
         console.warn("Cena sem hotspots:", scene.title);
         return;
       }
+const videoHotspots = MANUAL_VIDEO_MODAL_HOTSPOTS[normalizeId(scene.id)] || [];
 
+videoHotspots.forEach(hotspot => {
+  try {
+    const entity = createVideoModalHotspot(hotspot);
+
+    if (entity) {
+      container.appendChild(entity);
+    }
+  } catch (error) {
+    console.warn("Erro ao criar hotspot de vídeo:", hotspot, error);
+  }
+});
       scene.hotspots.forEach(hotspot => {
         try {
           const entity = createNavigationHotspot(hotspot);
@@ -267,6 +546,20 @@
           console.warn("Erro ao criar hotspot:", hotspot, error);
         }
       });
+
+  const modalHotspots = MANUAL_IMAGE_MODAL_HOTSPOTS[normalizeId(scene.id)] || [];
+
+  modalHotspots.forEach(hotspot => {
+  try {
+    const entity = createImageModalHotspot(hotspot);
+
+    if (entity) {
+      container.appendChild(entity);
+    }
+  } catch (error) {
+    console.warn("Erro ao criar hotspot de modal:", hotspot, error);
+  }
+});
     }
 
     function loadScene(sceneId) {
@@ -311,48 +604,200 @@
       }
     });
 
-    window.addEventListener("DOMContentLoaded", () => {
-      initScenes();
+window.addEventListener("DOMContentLoaded", () => {
+  initScenes();
+const videoCloseButton = document.querySelector("#video-modal-close");
+const videoCloseText = document.querySelector("#video-modal-close-text");
 
-      const sceneEl = document.querySelector("a-scene");
+if (videoCloseButton) {
+  videoCloseButton.addEventListener("click", closeVideoModal);
+}
 
-      sceneEl.addEventListener("loaded", () => {
-        console.log("A-Frame carregado.");
-        loadScene(START_SCENE_ID);
-      });
+if (videoCloseText) {
+  videoCloseText.addEventListener("click", closeVideoModal);
+}
+  const closeButton = document.querySelector("#modal-close");
+  const closeButtonBg = document.querySelector("#modal-close-bg");
+  const closeText = document.querySelector("#modal-close-text");
+
+  if (closeButton) {
+    closeButton.addEventListener("click", closeImageModal);
+  }
+
+  if (closeButtonBg) {
+    closeButtonBg.addEventListener("click", closeImageModal);
+  }
+
+  if (closeText) {
+    closeText.addEventListener("click", closeImageModal);
+  }
+
+  const sceneEl = document.querySelector("a-scene");
+
+  if (sceneEl) {
+    sceneEl.addEventListener("loaded", () => {
+      console.log("A-Frame carregado.");
+      loadScene(START_SCENE_ID);
     });
+  } else {
+    console.error("a-scene não encontrado.");
+  }
+});
   </script>
 </head>
 
 <body>
-  <a-scene
-    coord-debugger
-    vr-mode-ui="enabled: true"
-    webxr="referenceSpaceType: local-floor"
-    renderer="colorManagement: true"
-    loading-screen="enabled: false"
-    raycaster="objects: .clickable">
+<a-scene
+  coord-debugger
+  vr-mode-ui="enabled: true"
+  webxr="referenceSpaceType: local-floor"
+  renderer="colorManagement: true"
+  loading-screen="enabled: false"
+  cursor="rayOrigin: mouse"
+  raycaster="objects: .clickable">
+<a-entity id="video-modal" visible="false">
+  <a-plane
+    width="3.4"
+    height="2.35"
+    color="#111111"
+    opacity="0.94"
+    material="shader: flat; transparent: true">
+  </a-plane>
 
+  <a-video
+    id="modal-video"
+    position="0 0.18 0.03"
+    width="3.0"
+    height="1.65">
+  </a-video>
+
+  <a-text
+    id="video-modal-title"
+    value=""
+    position="0 1.03 0.04"
+    align="center"
+    width="3.2"
+    color="#ffffff">
+  </a-text>
+
+  <a-text
+    id="video-modal-text"
+    value=""
+    position="0 -0.88 0.04"
+    align="center"
+    width="3.0"
+    color="#ffffff">
+  </a-text>
+
+  <a-circle
+    id="video-modal-close"
+    class="clickable"
+    position="1.55 1.02 0.07"
+    radius="0.13"
+    color="#d93636"
+    material="shader: flat">
+  </a-circle>
+
+  <a-text
+    id="video-modal-close-text"
+    class="clickable"
+    value="×"
+    position="1.55 1.02 0.08"
+    align="center"
+    width="1.2"
+    color="#ffffff">
+  </a-text>
+</a-entity>
   <a-entity
     id="panorama"
     geometry="primitive: sphere; radius: 500; segmentsWidth: 64; segmentsHeight: 32"
     material="shader: flat; src: url(images_aframe/scene-2xe6BcmMY.jpg); side: back"
     scale="-1 1 1">
   </a-entity>
+<a-entity id="image-modal" visible="false">
+  <!-- Fundo do modal -->
+  <a-plane
+    width="3.4"
+    height="2.35"
+    color="#111111"
+    opacity="0.94"
+    material="shader: flat; transparent: true">
+  </a-plane>
 
+  <!-- Imagem principal -->
+  <a-image
+    id="modal-image"
+    position="0 0.22 0.03"
+    width="3.0"
+    height="1.55"
+    material="shader: flat">
+  </a-image>
+
+  <!-- Título -->
+  <a-text
+    id="modal-title"
+    value=""
+    position="0 1.03 0.04"
+    align="center"
+    width="3.2"
+    color="#ffffff">
+  </a-text>
+
+  <!-- Texto/descrição -->
+  <a-text
+    id="modal-text"
+    value=""
+    position="0 -0.82 0.04"
+    align="center"
+    width="3.0"
+    color="#ffffff">
+  </a-text>
+
+  <!-- Botão de fechar: fundo circular escuro -->
+  <a-circle
+    id="modal-close-bg"
+    class="clickable"
+    position="1.55 1.02 0.06"
+    radius="0.16"
+    color="#222222"
+    opacity="0.95"
+    material="shader: flat; transparent: true">
+  </a-circle>
+
+  <!-- Botão de fechar: círculo vermelho menor -->
+  <a-circle
+    id="modal-close"
+    class="clickable"
+    position="1.55 1.02 0.07"
+    radius="0.12"
+    color="#d93636"
+    material="shader: flat">
+  </a-circle>
+
+  <!-- X do botão -->
+  <a-text
+    id="modal-close-text"
+    class="clickable"
+    value="×"
+    position="1.55 1.02 0.08"
+    align="center"
+    width="1.2"
+    color="#ffffff">
+  </a-text>
+</a-entity>
     <a-entity id="hotspots"></a-entity>
 
     <a-entity id="rig" position="0 0 0">
 
       <a-camera position="0 0 0">
 
-  <a-cursor
-    fuse="true"
-    fuse-timeout="1000"
-    raycaster="objects: .clickable"
-    geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
-    material="color: white; shader: flat">
-  </a-cursor>
+      <a-cursor
+        fuse="true"
+        fuse-timeout="1000"
+        raycaster="objects: .clickable"
+        geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
+        material="color: white; shader: flat">
+      </a-cursor>
 
         <a-text
           id="scene-title"
