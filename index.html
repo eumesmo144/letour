@@ -789,26 +789,68 @@ if (videoCloseText) {
 
     <a-entity id="rig" position="0 0 0">
 
-      <a-camera position="0 0 0">
+<a-camera position="0 0 0">
 
-      <a-cursor
-        fuse="true"
-        fuse-timeout="1000"
-        raycaster="objects: .clickable"
-        geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
-        material="color: white; shader: flat">
-      </a-cursor>
+  <a-cursor
+    fuse="true"
+    fuse-timeout="1000"
+    raycaster="objects: .clickable"
+    geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
+    material="color: white; shader: flat">
+  </a-cursor>
 
-        <a-text
-          id="scene-title"
-          value=""
-          position="0 -0.38 -1.2"
-          align="center"
-          width="2.2"
-          color="white">
-        </a-text>
+  <a-text
+    id="scene-title"
+    value=""
+    position="0 -0.38 -1.2"
+    align="center"
+    width="2.2"
+    color="white">
+  </a-text>
 
-      </a-camera>
+  <!-- MENU FIXO HORIZONTAL -->
+
+  <a-entity id="fixed-icons" position="-1.65 -0.75 -1">
+
+    <a-image
+      id="btn1"
+      class="clickable"
+      src="assets/img/icon1.png"
+      width="0.20"
+      height="0.15"
+      position="0 0 0">
+    </a-image>
+
+    <a-image
+      id="btn2"
+      class="clickable"
+      src="assets/img/icon2.png"
+      width="0.10"
+      height="0.10"
+      position="0.12 0 0">
+    </a-image>
+
+    <a-image
+      id="btn3"
+      class="clickable"
+      src="assets/img/icon3.png"
+      width="0.10"
+      height="0.10"
+      position="0.22 0 0">
+    </a-image>
+
+    <a-image
+      id="btn4"
+      class="clickable"
+      src="assets/img/icon4.png"
+      width="0.25"
+      height="0.20"
+      position="0.37 0 0">
+    </a-image>
+
+  </a-entity>
+
+</a-camera>
 
       <a-entity
         laser-controls="hand: right"
