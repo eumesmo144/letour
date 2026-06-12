@@ -8,6 +8,42 @@
   <script src="js/tourData.js"></script>
 
   <script>
+
+  const STATIC_IMAGES = {
+"2xe6BcmMY": [
+  {
+    image: "assets/img/modal/base.png",
+    position: "3.79 -0.36 -1.22",
+    width:3,
+    height: 6,
+  }
+],
+"8Y5a8F3jJC": [{
+    image: "assets/img/modal/fratura.png",
+    position: "1.06 -0.34 3.84",
+    width:3,
+    height:6
+}
+],
+"Rqr5Oy424U": [{
+   image: "assets/img/modal/gnamas.png",
+   position: "3.90 -0.38 0.78",
+   width: 3,
+   height:4
+}],
+"RJqZgP0W3p": [{
+  image: "assets/img/modal/canelura.png",
+  position: "-1.30 -0.30 3.77",
+  width: 3,
+  height: 6
+}],
+"7NytOc4o_": [{
+  image: "assets/img/modal/topo.png",
+  position: "3.98 0.11 0.37",
+  width: 3,
+  height: 6
+}]
+};
   const MANUAL_HOTSPOT_POSITIONS = {
     "2xe6BcmMY": {
       "qEeHreqmJ5": "-2.87 -0.13 2.78",
@@ -28,6 +64,10 @@
      "TZyhEGStU": {
       "1kGDEh6nh4": "3.88 -0.99 -0.06"
     },
+    "8Y5a8F3jJC": {
+      "6ZkCPJmKb1": "3.41 0.12 2.09",
+      "TZyhEGStU": "3.97 -0.52 -0.07"
+    }
     
   };
 const MANUAL_VIDEO_MODAL_HOTSPOTS = {
@@ -184,6 +224,27 @@ const MANUAL_VIDEO_MODAL_HOTSPOTS = {
     });
   }
 });
+function createStaticImage(data) {
+
+  const image = document.createElement("a-image");
+
+  image.setAttribute("src", data.image);
+
+  image.setAttribute("position", data.position);
+
+  image.setAttribute("width", data.width || 1);
+
+  image.setAttribute("height", data.height || 1);
+
+  image.setAttribute(
+    "material",
+    "shader: flat; transparent: true"
+  );
+
+  image.setAttribute("look-at-camera", "");
+
+  return image;
+}
     function initScenes() {
       try {
         if (!tourData || !tourData.images) {
@@ -548,7 +609,16 @@ videoHotspots.forEach(hotspot => {
       });
 
   const modalHotspots = MANUAL_IMAGE_MODAL_HOTSPOTS[normalizeId(scene.id)] || [];
+  const staticImages =
+  STATIC_IMAGES[normalizeId(scene.id)] || [];
 
+staticImages.forEach(item => {
+
+  const entity = createStaticImage(item);
+
+  container.appendChild(entity);
+
+});
   modalHotspots.forEach(hotspot => {
   try {
     const entity = createImageModalHotspot(hotspot);
